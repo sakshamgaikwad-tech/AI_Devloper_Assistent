@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Saksham's AI</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI;
+}
+
+body{
+display:flex;
+height:100vh;
+background:#0f172a;
+color:white;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:260px;
+background:#020617;
+border-right:1px solid #334155;
+display:flex;
+flex-direction:column;
+padding:20px;
+}
+
+.logo{
+font-size:20px;
+font-weight:bold;
+color:#38bdf8;
+margin-bottom:20px;
+}
+
+.new-chat{
+background:#38bdf8;
+border:none;
+padding:12px;
+border-radius:8px;
+cursor:pointer;
+margin-bottom:20px;
+}
+
+.upload{
+border:1px solid #334155;
+padding:12px;
+border-radius:8px;
+cursor:pointer;
+margin-bottom:10px;
+text-align:center;
+}
+
+.upload:hover{
+background:#0f172a;
+}
+
+.file-list{
+flex:1;
+overflow:auto;
+}
+
+.file{
+padding:10px;
+border-radius:6px;
+margin-bottom:5px;
+background:#0f172a;
+}
+
+/* CHAT AREA */
+
+.chat-area{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+/* CHAT HEADER */
+
+.chat-header{
+padding:15px;
+border-bottom:1px solid #334155;
+font-size:18px;
+}
+
+/* CHAT MESSAGES */
+
+.chat{
+flex:1;
+overflow:auto;
+padding:30px;
+}
+
+.message{
+margin-bottom:20px;
+max-width:800px;
+}
+
+.user{
+background:#1e293b;
+padding:14px;
+border-radius:10px;
+margin-left:auto;
+width:fit-content;
+}
+
+.ai{
+background:#020617;
+padding:14px;
+border-radius:10px;
+width:fit-content;
+}
+
+/* INPUT */
+
+.input-area{
+border-top:1px solid #334155;
+padding:15px;
+display:flex;
+}
+
+input{
+flex:1;
+padding:14px;
+border:none;
+border-radius:8px;
+background:#020617;
+color:white;
+}
+
+button{
+margin-left:10px;
+padding:14px 20px;
+border:none;
+background:#38bdf8;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{
+background:#0ea5e9;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<div class="logo">⚡ Saksham's AI</div>
+
+<button class="new-chat" onclick="newChat()">+ New Chat</button>
+
+<div class="upload" onclick="fileInput.click()">
+Upload Code
+</div>
+
+<input type="file" id="fileInput" hidden>
+
+<div class="file-list" id="fileList"></div>
+
+</div>
+
+<!-- CHAT AREA -->
+
+<div class="chat-area">
+
+<div class="chat-header">
+AI Coding Assistant
+</div>
+
+<div class="chat" id="chat"></div>
+
+<div class="input-area">
+
+<input id="question" placeholder="Ask anything about your code..." />
+
+<button onclick="askAI()">Send</button>
+
+</div>
+
+</div>
+
+<script>
+
+const chat = document.getElementById("chat")
+const fileInput = document.getElementById("fileInput")
+const fileList = document.getElementById("fileList")
+
+/* NEW CHAT */
+
+function newChat(){
+
+chat.innerHTML=""
+
+}
+
+/* ADD MESSAGE */
+
+function addMessage(type,text){
+
+let div = document.createElement("div")
+
+div.className="message"
+
+let bubble = document.createElement("div")
+
+bubble.className = type==="user" ? "user":"ai"
+
+bubble.innerText=text
+
+div.appendChild(bubble)
+
+chat.appendChild(div)
+
+chat.scrollTop = chat.scrollHeight
+
+}
+
+/* ENTER KEY */
+
+document.getElementById("question").addEventListener("keypress",function(e){
+
+if(e.key==="Enter") askAI()
+
+})
+
+/* ASK AI */
+
+async function askAI(){
+
+let q = document.getElementById("question").value
+
+if(!q) return
+
+addMessage("user",q)
+
+document.getElementById("question").value=""
+
+let res = await fetch("http://127.0.0.1:8000/chat-codebase/",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({question:q})
+
+})
+
+let data = await res.json()
+
+addMessage("ai",data.answer)
+
+}
+
+/* FILE UPLOAD */
+
+fileInput.addEventListener("change", async ()=>{
+
+let file = fileInput.files[0]
+
+let formData = new FormData()
+
+formData.append("file",file)
+
+let res = await fetch("http://127.0.0.1:8000/upload-codebase/",{
+
+method:"POST",
+
+body:formData
+
+})
+
+if(res.ok){
+
+let div=document.createElement("div")
+
+div.className="file"
+
+div.innerText=file.name
+
+fileList.appendChild(div)
+
+alert("Code uploaded successfully")
+
+}else{
+
+alert("Upload failed")
+
+}
+
+})
+
+</script>
+
+</body>
+</html>
